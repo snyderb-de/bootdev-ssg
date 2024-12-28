@@ -5,7 +5,7 @@ class TextType(Enum):
     BOLD = "bold text"
     ITALIC = "italic text"
     CODE = "code text"
-    LINKS = "links text"
+    LINK = "link text"
     IMAGES = "images text"
 
 # create class TextNode with 3 properties: self.text, self.text_type and self.url
