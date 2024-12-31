@@ -1,30 +1,36 @@
+import re
 from textnode import TextNode, TextType
 from extraction import extract_markdown_images, extract_markdown_links  # Import the functions
 
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
+    delimiter_pattern = re.escape(delimiter)  # Escape special characters like *
+    regex = re.compile(f"(.*?){delimiter_pattern}(.*?){delimiter_pattern}(.*)")
+
     for node in old_nodes:
-        # Only process TextType.NORMAL nodes
         if node.text_type != TextType.NORMAL:
             new_nodes.append(node)
             continue
-        
-        # Split the text on the delimiter
-        parts = node.text.split(delimiter)
-        if len(parts) % 2 == 0:
-            raise ValueError(f"Unmatched delimiter '{delimiter}' in text: {node.text}")
-        
-        # Alternate between TextType.NORMAL and the given text_type
-        for i, part in enumerate(parts):
-            if i % 2 == 0:
-                # Normal text
-                if part:
-                    new_nodes.append(TextNode(part, TextType.NORMAL))
-            else:
-                # Delimited text
-                if part:
-                    new_nodes.append(TextNode(part, text_type))
+
+        text = node.text
+        while True:
+            match = regex.match(text)
+            if not match:
+                break
+
+            # Add text before the bold part
+            if match.group(1):
+                new_nodes.append(TextNode(match.group(1), TextType.NORMAL))
+            # Add the bold part
+            new_nodes.append(TextNode(match.group(2), text_type))
+            # Continue processing the remaining text
+            text = match.group(3)
+
+        # Add remaining text if any
+        if text:
+            new_nodes.append(TextNode(text, TextType.NORMAL))
+
     return new_nodes
 
 
